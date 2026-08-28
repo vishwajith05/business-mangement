@@ -64,7 +64,7 @@ export const Settings: React.FC = () => {
           <Beef className="w-6 h-6 text-red-500" />
           <span>AAS Foods Business &amp; System Settings</span>
         </h1>
-        <p className="text-xs text-stone-400 mt-1">Configure AAS Foods branding, Tax ID / GSTIN, currency defaults, and PDF invoice templates</p>
+        <p className="text-xs text-stone-400 mt-1">Configure AAS Foods branding, VAT Registration ID, currency defaults, and PDF invoice templates</p>
       </div>
 
       {savedSuccess && (
@@ -106,7 +106,7 @@ export const Settings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-stone-300 mb-1">Tax Registration ID (GSTIN / VAT) *</label>
+              <label className="block text-xs font-bold text-stone-300 mb-1">VAT Registration Number *</label>
               <input
                 type="text"
                 required

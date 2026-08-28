@@ -169,7 +169,7 @@ export const InventoryManagement: React.FC = () => {
                 <th className="py-3.5 px-4">Current Cold Stock</th>
                 <th className="py-3.5 px-4">Cost / Unit</th>
                 <th className="py-3.5 px-4">Selling / Unit</th>
-                <th className="py-3.5 px-4">Tax (GST)</th>
+                <th className="py-3.5 px-4">Tax (VAT)</th>
                 <th className="py-3.5 px-4">Price Inc. Tax</th>
                 <th className="py-3.5 px-4">Min Reorder</th>
                 <th className="py-3.5 px-4">Stock Status</th>
@@ -365,6 +365,33 @@ export const InventoryManagement: React.FC = () => {
                   placeholder="e.g. Shipment receipt Batch #AAS-881"
                   className="w-full px-3 py-2 rounded-xl glass-input text-xs"
                 />
+              </div>
+
+              {/* Live Quantity Preview */}
+              <div className="p-3 rounded-xl bg-stone-900/80 border border-stone-700/60 space-y-1.5">
+                <p className="text-[10px] font-extrabold text-stone-400 uppercase tracking-wider">Quantity Record Preview</p>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-stone-400">Current Stock</span>
+                  <span className="font-bold text-white font-mono">{selectedProduct.currentStock} {selectedProduct.unit}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-stone-400">
+                    {changeType === 'ADD' ? '+ Adding' : changeType === 'REMOVE' ? '− Removing' : '= Setting to'}
+                  </span>
+                  <span className={`font-bold font-mono ${changeType === 'ADD' ? 'text-emerald-400' : changeType === 'REMOVE' ? 'text-rose-400' : 'text-amber-400'}`}>
+                    {changeType === 'ADD' ? '+' : changeType === 'REMOVE' ? '-' : '='}{quantityValue} {selectedProduct.unit}
+                  </span>
+                </div>
+                <div className="border-t border-stone-700/60 pt-1.5 flex items-center justify-between text-xs">
+                  <span className="text-stone-300 font-bold">Stock After Submission</span>
+                  <span className="font-black text-amber-300 font-mono text-sm">
+                    {changeType === 'ADD'
+                      ? selectedProduct.currentStock + quantityValue
+                      : changeType === 'REMOVE'
+                        ? Math.max(0, selectedProduct.currentStock - quantityValue)
+                        : quantityValue} {selectedProduct.unit}
+                  </span>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">

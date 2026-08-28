@@ -25,7 +25,7 @@ router.get('/:id/pdf', authenticateToken, (req: AuthenticatedRequest, res: Respo
     // --- Header ---
     doc.fillColor('#1E293B').fontSize(22).text(settings.businessName, { align: 'left' });
     doc.fontSize(9).fillColor('#64748B').text(settings.tagline);
-    doc.text(`Tax ID / GSTIN: ${settings.taxId}`);
+    doc.text(`VAT Reg. No.: ${settings.taxId}`);
     doc.text(`Address: ${settings.address}`);
     doc.text(`Contact: ${settings.phone} | ${settings.email}`);
 

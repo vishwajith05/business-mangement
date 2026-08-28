@@ -244,7 +244,7 @@ export const SalesAndInvoices: React.FC<SalesAndInvoicesProps> = ({ currentUser 
                 <th className="py-3.5 px-4">Items &amp; Quantities Sold</th>
                 <th className="py-3.5 px-4">Revenue (Excl. Tax)</th>
                 <th className="py-3.5 px-4">Gross Profit</th>
-                <th className="py-3.5 px-4">Tax (GST)</th>
+                <th className="py-3.5 px-4">Tax (VAT)</th>
                 <th className="py-3.5 px-4">Grand Total</th>
                 <th className="py-3.5 px-4 text-right">PDF Invoice</th>
               </tr>
@@ -513,7 +513,7 @@ export const SalesAndInvoices: React.FC<SalesAndInvoicesProps> = ({ currentUser 
                     <span className="font-bold text-white">₹{cartTotalRevenue.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-stone-400">
-                    <span>Tax (GST Total):</span>
+                    <span>Tax (Vat Total):</span>
                     <span className="font-bold text-amber-300">+ ₹{cartTotalTax.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-stone-800 text-sm">

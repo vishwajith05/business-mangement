@@ -64,7 +64,7 @@ export const TaxAndAuditLogs: React.FC = () => {
             <Beef className="w-6 h-6 text-red-500" />
             <span>AAS Foods Tax Reports &amp; Audit Logs</span>
           </h1>
-          <p className="text-xs text-stone-400 mt-1">Meat GST collection ledger &amp; partner system security trail</p>
+          <p className="text-xs text-stone-400 mt-1">Meat VAT collection ledger &amp; partner system security trail</p>
         </div>
 
         {/* Tab Switcher */}
@@ -77,7 +77,7 @@ export const TaxAndAuditLogs: React.FC = () => {
                 : 'text-stone-400 hover:text-stone-200'
             }`}
           >
-            Meat Tax Ledger (GST)
+            Meat Tax Ledger (VAT)
           </button>
           <button
             onClick={() => setActiveTab('audit')}
@@ -97,7 +97,7 @@ export const TaxAndAuditLogs: React.FC = () => {
           {/* Tax Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="glass-card p-5 rounded-2xl border border-stone-800">
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Tax Collected (GST)</span>
+              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Tax Collected (VAT)</span>
               <p className="text-2xl font-black text-emerald-400 mt-1">₹{totalTaxCollected.toLocaleString()}</p>
               <span className="text-[11px] text-stone-400 font-semibold">Separate tax collection ledger</span>
             </div>
@@ -109,7 +109,7 @@ export const TaxAndAuditLogs: React.FC = () => {
             </div>
 
             <div className="glass-card p-5 rounded-2xl border border-stone-800">
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Effective GST Rate</span>
+              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Effective VAT Rate</span>
               <p className="text-2xl font-black text-amber-400 mt-1">
                 {totalTaxableRevenue > 0 ? ((totalTaxCollected / totalTaxableRevenue) * 100).toFixed(1) : 0}%
               </p>
@@ -141,7 +141,7 @@ export const TaxAndAuditLogs: React.FC = () => {
                   <th className="py-3 px-4">Partner Outlet</th>
                   <th className="py-3 px-4">Customer</th>
                   <th className="py-3 px-4">Subtotal (Excl. Tax)</th>
-                  <th className="py-3 px-4">Tax (GST)</th>
+                  <th className="py-3 px-4">Tax (VAT)</th>
                   <th className="py-3 px-4">Grand Total</th>
                 </tr>
               </thead>
