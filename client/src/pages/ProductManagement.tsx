@@ -462,6 +462,37 @@ export const ProductManagement: React.FC = () => {
                     className="w-full px-3 py-2 rounded-xl glass-input text-xs"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-300 mb-1">
+                    {editingProduct ? 'Current Stock Quantity' : 'Initial Stock Quantity'} ({formData.unit || 'kg'}) *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={formData.currentStock}
+                    onChange={(e) => setFormData({ ...formData, currentStock: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl glass-input text-xs font-bold text-emerald-400"
+                    placeholder="e.g. 100"
+                  />
+                  {!editingProduct && (
+                    <p className="text-[10px] text-stone-500 mt-1">This sets the opening stock when the product is created.</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-300 mb-1">Min Reorder Level ({formData.unit || 'kg'})</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.minStockLevel}
+                    onChange={(e) => setFormData({ ...formData, minStockLevel: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl glass-input text-xs"
+                    placeholder="e.g. 10"
+                  />
+                  <p className="text-[10px] text-stone-500 mt-1">Alert triggers when stock falls below this level.</p>
+                </div>
               </div>
 
               {/* Automatic Tax & Price Calculator Preview Box */}
