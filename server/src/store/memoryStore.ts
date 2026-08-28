@@ -241,109 +241,19 @@ export class MemoryStore {
   }
 
   private seedInitialHistoryAndSales() {
-    const now = Date.now();
-    const partners = [
-      { id: 'u-partner-01', name: 'Partner One (North)', role: 'PARTNER' },
-      { id: 'u-partner-02', name: 'Partner Two (West)', role: 'PARTNER' },
-      { id: 'u-partner-03', name: 'Partner Three (South)', role: 'PARTNER' }
+    // Fresh start: no historical sales or dummy analytical data
+    this.sales = [];
+    this.stockLogs = [];
+    this.auditLogs = [
+      {
+        id: 'aud-1',
+        userId: 'u-admin-01',
+        userName: 'AAS Foods Admin',
+        action: 'SYSTEM_INIT',
+        details: 'System initialized for AAS Foods Wholesale Management.',
+        createdAt: new Date().toISOString()
+      }
     ];
-
-    const customers = [
-      { name: 'Apex Tech Solutions', email: 'procurement@apextech.com', phone: '+91 98111 22233' },
-      { name: 'Horizon Cloud Data Center', email: 'infra@horizoncloud.io', phone: '+91 98222 33344' },
-      { name: 'Starlight Cybernetics', email: 'orders@starlight.co', phone: '+91 98333 44455' }
-    ];
-
-    let invCounter = 1001;
-    const offsetsInDays = [20, 12, 5, 1];
-
-    offsetsInDays.forEach((dayOffset, idx) => {
-      const partner = partners[idx % partners.length];
-      const customer = customers[idx % customers.length];
-      const saleDate = new Date(now - dayOffset * 86400000).toISOString();
-
-      const p1 = this.products[idx % 3];
-      const p2 = this.products[(idx + 3) % this.products.length];
-
-      const qty1 = 2;
-      const qty2 = 4;
-
-      const item1Subtotal = p1.sellingPrice * qty1;
-      const item1Cost = p1.purchasePrice * qty1;
-      const item1Profit = item1Subtotal - item1Cost;
-      const item1Tax = item1Subtotal * (p1.taxRate / 100);
-
-      const item2Subtotal = p2.sellingPrice * qty2;
-      const item2Cost = p2.purchasePrice * qty2;
-      const item2Profit = item2Subtotal - item2Cost;
-      const item2Tax = item2Subtotal * (p2.taxRate / 100);
-
-      const totalRevenue = item1Subtotal + item2Subtotal;
-      const totalCost = item1Cost + item2Cost;
-      const totalGrossProfit = item1Profit + item2Profit;
-      const totalTax = item1Tax + item2Tax;
-      const grandTotal = totalRevenue + totalTax;
-
-      const sale: Sale = {
-        id: `sale-${invCounter}`,
-        invoiceNumber: `INV-2026-${invCounter}`,
-        partnerId: partner.id,
-        partnerName: partner.name,
-        customerName: customer.name,
-        customerEmail: customer.email,
-        customerPhone: customer.phone,
-        totalRevenue,
-        totalCost,
-        totalGrossProfit,
-        totalTax,
-        grandTotal,
-        paymentMethod: 'Bank Transfer',
-        status: 'COMPLETED',
-        createdAt: saleDate,
-        items: [
-          {
-            id: `sitem-${invCounter}-1`,
-            saleId: `sale-${invCounter}`,
-            productId: p1.id,
-            productName: p1.name,
-            quantity: qty1,
-            unitPurchasePrice: p1.purchasePrice,
-            unitSellingPrice: p1.sellingPrice,
-            taxRate: p1.taxRate,
-            taxAmount: item1Tax,
-            itemSubtotal: item1Subtotal,
-            itemCost: item1Cost,
-            itemProfit: item1Profit
-          },
-          {
-            id: `sitem-${invCounter}-2`,
-            saleId: `sale-${invCounter}`,
-            productId: p2.id,
-            productName: p2.name,
-            quantity: qty2,
-            unitPurchasePrice: p2.purchasePrice,
-            unitSellingPrice: p2.sellingPrice,
-            taxRate: p2.taxRate,
-            taxAmount: item2Tax,
-            itemSubtotal: item2Subtotal,
-            itemCost: item2Cost,
-            itemProfit: item2Profit
-          }
-        ]
-      };
-
-      this.sales.push(sale);
-      invCounter++;
-    });
-
-    this.auditLogs.push({
-      id: 'aud-1',
-      userId: 'u-admin-01',
-      userName: 'System Administrator',
-      action: 'SYSTEM_INIT',
-      details: 'Initialized with Admin and Partner user management.',
-      createdAt: new Date(now - 30 * 86400000).toISOString()
-    });
   }
 
   // --- Real-Time Excel Auto-Sync Engine ---
@@ -741,10 +651,10 @@ export class MemoryStore {
     const lowStockCount = this.products.filter(p => p.currentStock > 0 && p.currentStock <= p.minStockLevel).length;
     const outOfStockCount = this.products.filter(p => p.currentStock === 0).length;
 
-    const mockTrendSales = +12.5;
-    const mockTrendProfit = +15.8;
-    const mockTrendOrders = +8.3;
-    const mockTrendTax = +14.2;
+    const mockTrendSales = totalOrders > 0 ? +12.5 : 0;
+    const mockTrendProfit = totalOrders > 0 ? +15.8 : 0;
+    const mockTrendOrders = totalOrders > 0 ? +8.3 : 0;
+    const mockTrendTax = totalOrders > 0 ? +14.2 : 0;
 
     const trendMap = new Map<string, { date: string; Sales: number; Cost: number; Profit: number }>();
     salesPool.forEach(s => {
