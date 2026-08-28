@@ -12,10 +12,11 @@ import {
   Download,
   Flame,
   Snowflake,
-  Layers
+  Layers,
+  History
 } from 'lucide-react';
-import { productsAPI, reportsAPI } from '../api';
-import { Product } from '../types';
+import { productsAPI, reportsAPI, inventoryAPI } from '../api';
+import { Product, StockLog } from '../types';
 
 export const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -27,6 +28,11 @@ export const ProductManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteProductCandidate, setDeleteProductCandidate] = useState<Product | null>(null);
+
+  // Product History Log Modal State
+  const [showProductHistoryModal, setShowProductHistoryModal] = useState(false);
+  const [productLogs, setProductLogs] = useState<StockLog[]>([]);
+  const [historyTargetProduct, setHistoryTargetProduct] = useState<Product | null>(null);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -63,6 +69,17 @@ export const ProductManagement: React.FC = () => {
   useEffect(() => {
     fetchProducts();
   }, [categoryFilter, search]);
+
+  const handleViewProductQuantityHistory = async (product: Product) => {
+    try {
+      setHistoryTargetProduct(product);
+      const logs = await inventoryAPI.getLogs(product.id);
+      setProductLogs(logs);
+      setShowProductHistoryModal(true);
+    } catch (err) {
+      console.error('Failed to fetch product quantity logs:', err);
+    }
+  };
 
   const handleOpenAddModal = () => {
     setEditingProduct(null);
@@ -276,6 +293,14 @@ export const ProductManagement: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleViewProductQuantityHistory(p)}
+                          className="p-1.5 rounded-lg text-amber-300 hover:text-amber-200 hover:bg-amber-950/60 border border-amber-800/40 transition-colors flex items-center gap-1 text-[10px] font-extrabold px-2"
+                          title="View Product Quantity Movement Records"
+                        >
+                          <History className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Quantity Log</span>
+                        </button>
                         <button
                           onClick={() => handleOpenEditModal(p)}
                           className="p-1.5 rounded-lg text-stone-400 hover:text-amber-300 hover:bg-stone-800 transition-colors"
@@ -518,6 +543,89 @@ export const ProductManagement: React.FC = () => {
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs"
               >
                 Delete Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Quantity Movement Log Modal */}
+      {showProductHistoryModal && historyTargetProduct && (
+        <div className="fixed inset-0 bg-stone-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="glass-panel p-6 rounded-3xl max-w-4xl w-full border border-red-600/30 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+              <div>
+                <h2 className="text-base font-black text-white flex items-center gap-2">
+                  <History className="w-5 h-5 text-amber-400" />
+                  <span>Quantity Records: {historyTargetProduct.name} ({historyTargetProduct.sku})</span>
+                </h2>
+                <p className="text-xs text-stone-400">Audit trail of all additions, removals, and sales deductions</p>
+              </div>
+              <button onClick={() => setShowProductHistoryModal(false)} className="text-stone-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 my-4">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-stone-900/90 border-b border-stone-800 text-[10px] font-extrabold text-stone-400 uppercase">
+                    <th className="py-2.5 px-3">Date &amp; Time</th>
+                    <th className="py-2.5 px-3">Action Type</th>
+                    <th className="py-2.5 px-3">Qty Changed</th>
+                    <th className="py-2.5 px-3">Stock Before ➔ After</th>
+                    <th className="py-2.5 px-3">Recorded By</th>
+                    <th className="py-2.5 px-3">Reason / Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-800/60">
+                  {productLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-stone-500 font-semibold">
+                        No quantity changes recorded for this item yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    productLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-stone-800/40">
+                        <td className="py-2.5 px-3 text-stone-400 font-mono text-[10px]">
+                          {new Date(log.createdAt).toLocaleString()}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-black ${
+                            log.changeType === 'ADD' ? 'bg-emerald-950 text-emerald-300 border border-emerald-700/40' :
+                            log.changeType === 'REMOVE' ? 'bg-rose-950 text-rose-300 border border-rose-700/40' :
+                            log.changeType === 'SALE' ? 'bg-amber-950 text-amber-300 border border-amber-700/40' :
+                            'bg-red-950 text-red-300 border border-red-700/40'
+                          }`}>
+                            {log.changeType === 'SALE' ? '🛒 SALE DEDUCTION' : log.changeType === 'ADD' ? '📥 STOCK ADDITION' : log.changeType}
+                          </span>
+                        </td>
+                        <td className={`py-2.5 px-3 font-bold font-mono ${log.quantityChanged > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {log.quantityChanged > 0 ? `+${log.quantityChanged}` : log.quantityChanged} {historyTargetProduct.unit}
+                        </td>
+                        <td className="py-2.5 px-3 text-stone-300 font-mono">
+                          {log.previousStock} &rarr; <span className="font-bold text-white">{log.newStock}</span> {historyTargetProduct.unit}
+                        </td>
+                        <td className="py-2.5 px-3 text-stone-400 font-medium">
+                          {log.userName || log.userId}
+                        </td>
+                        <td className="py-2.5 px-3 text-stone-400 italic">
+                          {log.reason || '-'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="pt-3 border-t border-stone-800 text-right">
+              <button
+                onClick={() => setShowProductHistoryModal(false)}
+                className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-300 rounded-xl font-bold text-xs"
+              >
+                Close Log
               </button>
             </div>
           </div>

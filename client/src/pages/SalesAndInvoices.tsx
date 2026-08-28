@@ -13,10 +13,11 @@ import {
   DollarSign,
   Receipt,
   Beef,
-  Flame
+  Flame,
+  History
 } from 'lucide-react';
-import { salesAPI, productsAPI, reportsAPI } from '../api';
-import { Sale, Product, User } from '../types';
+import { salesAPI, productsAPI, reportsAPI, inventoryAPI } from '../api';
+import { Sale, Product, User, StockLog } from '../types';
 
 interface SalesAndInvoicesProps {
   currentUser: User;
@@ -41,6 +42,10 @@ export const SalesAndInvoices: React.FC<SalesAndInvoicesProps> = ({ currentUser 
   // PDF Preview Modal
   const [selectedInvoiceForPDF, setSelectedInvoiceForPDF] = useState<Sale | null>(null);
 
+  // Quantity Movement Log Modal State
+  const [showQuantityLogsModal, setShowQuantityLogsModal] = useState(false);
+  const [quantityLogs, setQuantityLogs] = useState<StockLog[]>([]);
+
   const fetchSalesAndProducts = async () => {
     setLoading(true);
     try {
@@ -60,6 +65,16 @@ export const SalesAndInvoices: React.FC<SalesAndInvoicesProps> = ({ currentUser 
   useEffect(() => {
     fetchSalesAndProducts();
   }, [partnerFilter]);
+
+  const handleOpenQuantityLogs = async () => {
+    try {
+      const logs = await inventoryAPI.getLogs();
+      setQuantityLogs(logs);
+      setShowQuantityLogsModal(true);
+    } catch (err) {
+      console.error('Failed to fetch stock logs:', err);
+    }
+  };
 
   const handleAddToCart = (productId: string) => {
     const existing = cartItems.find(i => i.productId === productId);
@@ -158,6 +173,14 @@ export const SalesAndInvoices: React.FC<SalesAndInvoicesProps> = ({ currentUser 
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleOpenQuantityLogs}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-red-950/50 hover:bg-red-900/60 text-red-300 border border-red-800/60 font-extrabold text-xs transition-colors shadow-md shadow-red-950/40"
+          >
+            <History className="w-4 h-4 text-amber-400" />
+            <span>Quantity Movement Records</span>
+          </button>
+
           {isAdmin && (
             <button
               onClick={() => reportsAPI.downloadSalesExcel()}
@@ -218,6 +241,7 @@ export const SalesAndInvoices: React.FC<SalesAndInvoicesProps> = ({ currentUser 
                 <th className="py-3.5 px-4">Date</th>
                 <th className="py-3.5 px-4">Partner Outlet</th>
                 <th className="py-3.5 px-4">Customer</th>
+                <th className="py-3.5 px-4">Items &amp; Quantities Sold</th>
                 <th className="py-3.5 px-4">Revenue (Excl. Tax)</th>
                 <th className="py-3.5 px-4">Gross Profit</th>
                 <th className="py-3.5 px-4">Tax (GST)</th>
@@ -228,13 +252,13 @@ export const SalesAndInvoices: React.FC<SalesAndInvoicesProps> = ({ currentUser 
             <tbody className="divide-y divide-stone-800/60 text-xs">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-stone-500 font-semibold">
+                  <td colSpan={10} className="py-12 text-center text-stone-500 font-semibold">
                     Loading sales records...
                   </td>
                 </tr>
               ) : filteredSales.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-stone-500 font-semibold">
+                  <td colSpan={10} className="py-12 text-center text-stone-500 font-semibold">
                     No sales orders recorded yet.
                   </td>
                 </tr>
@@ -252,6 +276,15 @@ export const SalesAndInvoices: React.FC<SalesAndInvoicesProps> = ({ currentUser 
                     </td>
                     <td className="py-3.5 px-4 font-bold text-white">
                       {sale.customerName}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="flex flex-wrap gap-1 max-w-xs">
+                        {sale.items && sale.items.map((item, idx) => (
+                          <span key={idx} className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-950/60 text-amber-300 border border-amber-800/40">
+                            {item.quantity}x {item.productName}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                     <td className="py-3.5 px-4 text-stone-300">
                       ₹{sale.totalRevenue.toLocaleString()}
@@ -542,6 +575,93 @@ export const SalesAndInvoices: React.FC<SalesAndInvoicesProps> = ({ currentUser 
                 className="w-full h-full min-h-[450px] border-0"
                 title="PDF Invoice Preview"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quantity Movement Records Modal */}
+      {showQuantityLogsModal && (
+        <div className="fixed inset-0 bg-stone-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="glass-panel p-6 rounded-3xl max-w-4xl w-full border border-red-600/30 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+              <div>
+                <h2 className="text-base font-black text-white flex items-center gap-2">
+                  <History className="w-5 h-5 text-amber-400" />
+                  <span>Quantity Movement &amp; Stock Ledger Records</span>
+                </h2>
+                <p className="text-xs text-stone-400">Complete record of stock additions and sales deductions</p>
+              </div>
+              <button onClick={() => setShowQuantityLogsModal(false)} className="text-stone-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 my-4">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-stone-900/90 border-b border-stone-800 text-[10px] font-extrabold text-stone-400 uppercase">
+                    <th className="py-2.5 px-3">Date &amp; Time</th>
+                    <th className="py-2.5 px-3">Meat Cut / Item</th>
+                    <th className="py-2.5 px-3">Action Type</th>
+                    <th className="py-2.5 px-3">Quantity Changed</th>
+                    <th className="py-2.5 px-3">Stock Progression</th>
+                    <th className="py-2.5 px-3">Recorded By</th>
+                    <th className="py-2.5 px-3">Reason / Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-800/60">
+                  {quantityLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-stone-500 font-semibold">
+                        No quantity movement records logged yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    quantityLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-stone-800/40">
+                        <td className="py-2.5 px-3 text-stone-400 font-mono text-[10px]">
+                          {new Date(log.createdAt).toLocaleString()}
+                        </td>
+                        <td className="py-2.5 px-3 font-bold text-white">
+                          {log.productName || log.productId}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-black ${
+                            log.changeType === 'ADD' ? 'bg-emerald-950 text-emerald-300 border border-emerald-700/40' :
+                            log.changeType === 'REMOVE' ? 'bg-rose-950 text-rose-300 border border-rose-700/40' :
+                            log.changeType === 'SALE' ? 'bg-amber-950 text-amber-300 border border-amber-700/40' :
+                            'bg-red-950 text-red-300 border border-red-700/40'
+                          }`}>
+                            {log.changeType === 'SALE' ? '🛒 SALE DEDUCTION' : log.changeType === 'ADD' ? '📥 STOCK ADDITION' : log.changeType}
+                          </span>
+                        </td>
+                        <td className={`py-2.5 px-3 font-bold font-mono ${log.quantityChanged > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {log.quantityChanged > 0 ? `+${log.quantityChanged}` : log.quantityChanged}
+                        </td>
+                        <td className="py-2.5 px-3 text-stone-300 font-mono">
+                          {log.previousStock} &rarr; <span className="font-bold text-white">{log.newStock}</span>
+                        </td>
+                        <td className="py-2.5 px-3 text-stone-400 font-medium">
+                          {log.userName || log.userId}
+                        </td>
+                        <td className="py-2.5 px-3 text-stone-400 italic">
+                          {log.reason || '-'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="pt-3 border-t border-stone-800 text-right">
+              <button
+                onClick={() => setShowQuantityLogsModal(false)}
+                className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-300 rounded-xl font-bold text-xs"
+              >
+                Close Records
+              </button>
             </div>
           </div>
         </div>
