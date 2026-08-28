@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nexus-business-backend
+    name: aas-foods-backend
     env: node
     region: singapore
     plan: free
